@@ -15,7 +15,7 @@ For completeness the code is show below also.
 constexpr bool cpu_nios2 = true;
 
 // we want to prevent users from calling this version on cpu_nios2 targets
-int square(double num) {
+constexpr double square(double num) noexcept {
     static_assert(!cpu_nios2,"Prevent this from compiling on cpu_nios2 targets");
     return num * num;
 }

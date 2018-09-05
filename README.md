@@ -2,7 +2,7 @@
 Recently I came across a problem using static_assert. 
 The problem was that a piece of code was not allowed to compile on a specific target platform since double is not supported. 
 However on all other platforms the code was intended to be used and compiled since double precision is needed for simulation 
-real physical processes etc.
+real physical processes.
 
 To give an idea of the initial problem a link to compiler explorer is given with a simple piece of code that shows that it is 
 not possible for ordinary non template functions to use static_assert to limit platform compilation.
@@ -28,11 +28,10 @@ int main() {
 The problem is that ordinary functions are compiled regardless if they are used or not.
 In this case what we really want is for the compiler to ignore static_asserts for functions that are not used in the main program.
 
-To work around this problem we can change the non template function to a template function and give it a default template parameter
-to keep the calling conversion and prevent us from specifying another function arguments. If we do not have a default template parameter 
-we would need a second argument for the compiler to deduce the type or call the function as square<T> which would be more verbose and change
-existing code.
-Additionally we sprinkle a little extra type traits and get the following implementation with the same function api.
+To work around this problem we can change the non template function square to a template function and give it a default template parameter.
+This enables us to keep the calling conversion and prevent us from specifying another function argument in order for the compiler to
+deduce the type automatically. Alternatively the function could be called as square\<T\>(...) which would be more verbose and change existing user code.
+If we use another type trait we get the following implementation with the same function api of the non template square function.
 
 A compiler explorer link for the final solution is given below.
 
@@ -62,8 +61,8 @@ int main() {
   // This is not possible with the non template square version.
   
   double tmp;
-  //tmp = square(3);      // fails when cpu_nios2 is true but compiles the cpu_nios2 is false. Same calling syntax as ordinary function.
-  //tmp = square<int>(3); // fails to instantiate square for all other types than double.
+  //tmp = square(3);      // fails when cpu_nios2 is true but compiles when cpu_nios2 is false. Same calling syntax as ordinary function.
+  //tmp = square<int>(3); // fails to instantiate square for all other types than double!
   return tmp;
 }
 ```
@@ -74,5 +73,5 @@ ordinary non template functions to template functions with default template para
 
 The benefit of this approach is that no client code needs to be changed as the function calling syntax stays the same.
 Additionally the function can be limited to the exact type by using std::is_same<T,double>::value so that clients are
-prohibited in creating e.g. a square\<int\> version thus keeping the binary size the same or smaller in case LTO is not use.
+prohibited in creating e.g. a square\<int\> version thus keeping the binary size the same or smaller (Link Time Optimization can remove unused functions thus making the binary size smaller).
 
